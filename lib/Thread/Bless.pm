@@ -3,7 +3,7 @@ package Thread::Bless;
 # Make sure we have version info for this module
 # Make sure we do everything by the book from now on
 
-$VERSION = '0.03';
+$VERSION = '0.05';
 use strict;
 
 # Make sure we can find out the refaddr of an object and weaken it
@@ -336,6 +336,10 @@ register objects created in such a manner by calling the "register" class
 function.  Any object passed to it will be registerd B<if> the class of the
 object is a class for which Thread::Bless operates (either implicitely or
 explicitely have the "package" class method called for).
+
+=head1 REQUIRED MODULES
+
+ Scalar::Util (1.08)
 
 =head1 ORDER OF LOADING
 

@@ -1,3 +1,10 @@
+0.05	28 December 2003
+	Added automatic required modules update using Devel::Required.
+
+0.04	5 December 2003
+	Added tests for creating blessed objects that are not activated with
+	Thread::Bless.
+
 0.03	4 December 2003
 	Made the registering objects functionality accessible externally so
 	that it can also be used on object that are blessed in XS.  Suggested
