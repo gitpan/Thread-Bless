@@ -1,0 +1,12 @@
+MANIFEST
+CHANGELOG
+README
+TODO
+VERSION
+Makefile.PL
+lib/Thread/Bless.pm
+t/Bless01.t
+t/Bless02.t
+t/Bless03.t
+t/Bless04.t
+META.yml                                 Module meta-data (added by MakeMaker)
