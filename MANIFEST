@@ -10,4 +10,6 @@ t/Bless02.t
 t/Bless03.t
 t/Bless04.t
 t/Bless05.t
+t/Bless06.t
+t/Bless07.t
 META.yml                                 Module meta-data (added by MakeMaker)

@@ -1,3 +1,8 @@
+0.03	4 December 2003
+	Made the registering objects functionality accessible externally so
+	that it can also be used on object that are blessed in XS.  Suggested
+	by Stas Bekman.
+
 0.02	29 November 2003
 	Changed the INIT handler to a normal "initialize" subroutine, and
 	have the INIT handler call that.  Made sure that the handler can be

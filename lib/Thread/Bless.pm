@@ -3,12 +3,12 @@ package Thread::Bless;
 # Make sure we have version info for this module
 # Make sure we do everything by the book from now on
 
-$VERSION = '0.02';
+$VERSION = '0.03';
 use strict;
 
 # Make sure we can find out the refaddr of an object and weaken it
 
-use Scalar::Util qw(refaddr weaken);
+use Scalar::Util qw(blessed refaddr weaken);
 
 # Thread local hash keyed to name of package being handled
 
@@ -30,18 +30,13 @@ BEGIN {
 #  Steal the system bless with a sub
 #   Obtain the class
 #   Create the object with the given parameters
-#   If objesct of this package are handled
-#    Save a weakened reference to the object, keyed to its address
+#   Save weakened ref keyed to address if objects of this package are handled
 #   Return the blessed object
 
     *CORE::GLOBAL::bless = sub {
         my $class = $_[1] || caller();
         my $object = $old ? $old->( $_[0],$class ) : CORE::bless $_[0],$class;
-        if (my $settings = $handled{$class}) {
-            weaken(
-             $settings->{'object'}->{refaddr $object} = $object
-            );
-        }
+        register( __PACKAGE__,$object );
         $object;
     };
 } #BEGIN
@@ -74,6 +69,7 @@ sub import {
 #  If it is a package setting
 #   Obtain the associated package names
 #   Save the class names for later checks
+#   And make sure the default setting for DESTROY applies there
 #  Elseif it is a known method
 #   Call class method for all classes
 #  Else
@@ -85,6 +81,7 @@ sub import {
         if ($method eq 'package') {
             $class = ref( $value ) ? $value : [$value];
             push @all,@{$class};
+            destroy->( $_,0 ) foreach @{$class};
         } elsif ($method =~ m#^(?:destroy|fixup|initialize)$#) {
             $method->( $_,$value ) foreach @{$class};
         } else {
@@ -194,6 +191,24 @@ sub fixup {
 } #fixup
 
 #---------------------------------------------------------------------------
+#  IN: 1 class (ignored)
+#      2..N objects to register
+
+sub register {
+
+# Lose the class
+# For all objects specified
+#  Reloop if we're not handling this class
+#  Register this object with a weakened reference, keyed by address
+
+    shift;
+    foreach (@_) {
+        next unless my $settings = $handled{blessed $_};
+        weaken( $settings->{'object'}->{refaddr $_} = $_ );
+    }
+} #register
+
+#---------------------------------------------------------------------------
 
 __END__
 
@@ -227,6 +242,8 @@ Thread::Bless - make blessed objects thread-aware
       destroy => 1,                          # destroy also in threads
       fixup => 'Baz::fixup',                 # call this sub for fixup
     );
+
+    Thread::Bless->register( @object ); # for objects from XSUBs only
 
 =head1 DESCRIPTION
 
@@ -308,12 +325,25 @@ modules are loaded at runtime with "require" or "eval" (such as the L<MOD_PERL>
 environment).  It runs the initializations that are normally run automatically
 in "normal" Perl environments.
 
+=head2 register
+
+ Thread::Bless->register( @object ); # only for blessed objects created in XSUBs
+
+Not all blessed objects in Perl are necessarily created with "bless": they can
+also be created in XSUBs and thereby bypass the registration mechanism that
+Thread::Bless installs for "bless".  For those cases, it is possible to
+register objects created in such a manner by calling the "register" class
+function.  Any object passed to it will be registerd B<if> the class of the
+object is a class for which Thread::Bless operates (either implicitely or
+explicitely have the "package" class method called for).
+
 =head1 ORDER OF LOADING
 
 The Thread::Bless module installs its own version of the "bless" system
-function.  Without that special version of "bless", it can not work.  This
-means that the Thread::Bless module needs to be loaded B<before> any modules
-that you want the special functionality of Thread::Bless to be applied to.
+function.  Without that special version of "bless", it can not work (unless
+you L<register> your objects yourself).  This means that the Thread::Bless
+module needs to be loaded B<before> any modules that you want the special
+functionality of Thread::Bless to be applied to.
 
 =head1 BUGS
 
@@ -399,6 +429,6 @@ modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<threads>.
+L<threads>, L<mod_perl>.
 
 =cut
