@@ -1,2 +1,9 @@
-0.01	14 November 203
+0.02	29 November 2003
+	Changed the INIT handler to a normal "initialize" subroutine, and
+	have the INIT handler call that.  Made sure that the handler can be
+	called seperately and multiple times.  Added some documentation in
+	the MOD_PERL section indicating it is ok to call "initialize" as a
+	class method as many times as you want.
+
+0.01	14 November 2003
 	First version of Thread::Bless.

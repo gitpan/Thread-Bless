@@ -3,7 +3,7 @@ package Thread::Bless;
 # Make sure we have version info for this module
 # Make sure we do everything by the book from now on
 
-$VERSION = '0.01';
+$VERSION = '0.02';
 use strict;
 
 # Make sure we can find out the refaddr of an object and weaken it
@@ -85,7 +85,7 @@ sub import {
         if ($method eq 'package') {
             $class = ref( $value ) ? $value : [$value];
             push @all,@{$class};
-        } elsif ($method =~ m#^(?:destroy|fixup)$#) {
+        } elsif ($method =~ m#^(?:destroy|fixup|initialize)$#) {
             $method->( $_,$value ) foreach @{$class};
         } else {
             warn "Don't know how to handle '$method' in ".__PACKAGE__."->import\n";
@@ -100,17 +100,23 @@ sub import {
 } #import
 
 #---------------------------------------------------------------------------
+# This should really just be a subroutine called INIT, but unfortunately,
+# you cannot call a subroutine named INIT from a program, so we call the
+# subroutine that does the actual work "initialize" and let the INIT block
+# goto this subroutine to do the actual work.
 
-sub INIT {
+sub initialize {
 
 # Allow for tricky stuff without warnings
 # For all the classes that we're doing
 #  Obtain the reference to the settings of this class
+#  Reloop if we did this one before
 #  Obtain the reference to the current DESTROY method (if any)
 
     no strict 'refs'; no warnings 'redefine';
     while (my $class = each %handled) {
         my $settings = $handled{$class};
+        next if $settings->{'DESTROY'};
         my $old = $settings->{'DESTROY'} = $class->can( 'DESTROY' );
 
 #  Put our DESTROY method in there which
@@ -122,7 +128,8 @@ sub INIT {
             goto &$old if $old and ($settings->{'destroy'} or $existed);
         };
     }
-} #INIT
+} #initialize
+INIT { goto &initialize } #INIT
 
 #---------------------------------------------------------------------------
 #  IN: 1 class (ignored)
@@ -292,11 +299,27 @@ method called on them when they are going out of scope.
 The "fixup" class method sets and returns the subroutine that will be executed
 when an object of the class from which this class method is called.
 
+=head2 initialize
+
+ Thread::Bless->initialize;  # only needed in special cases
+
+The "initialize" class method is needed B<only> in an environment where
+modules are loaded at runtime with "require" or "eval" (such as the L<MOD_PERL>
+environment).  It runs the initializations that are normally run automatically
+in "normal" Perl environments.
+
+=head1 ORDER OF LOADING
+
+The Thread::Bless module installs its own version of the "bless" system
+function.  Without that special version of "bless", it can not work.  This
+means that the Thread::Bless module needs to be loaded B<before> any modules
+that you want the special functionality of Thread::Bless to be applied to.
+
 =head1 BUGS
 
 None in the module itself (so far).  However, several Perl versions have
 problems with cloned, weakened references (which are used by Thread::Bless
-to keep record of the objects that need fixing up and/or destroying.  This
+to keep record of the objects that need fixing up and/or destroying).  This
 shows up as errors in the test-suite or lots of warnings being displayed.
 Later versions of the Thread::Bless module may include XS code to circumvent
 these problems for specific versions of Perl.
@@ -333,7 +356,26 @@ test-suite should complete without finding any errors.
 
 =head1 MOD_PERL
 
-No special accommodations for mod_perl have been made.
+This module's functioning depends on running the INIT {} subroutine
+automatically when Perl starts executing.  However, this does B<not> happen
+when running under mod_perl: the INIT state has passed long before this
+module is loaded, see
+
+ L<http://perl.apache.org/docs/1.0/guide/porting.html#CHECK_And_INIT_Blocks>
+
+for more information.  Therefore this module does not work correctly unless
+you execute this special initialization check yourself.  This, fortunately,
+is easy to do, by adding:
+
+ Thread::Bless->initialize;
+
+Executing the "initialize" class method is enough to do the initializations
+that Thread::Bless needs (provided Thread::Bless was loaded B<before> any of
+the modules to which it should apply its magic).  And to ensure full
+compatibility with this and future versions of this module, Perl and mod_perl,
+you can call this class method as many times as you want: only modules that
+have not been initialized before, will be initialized when this class method
+is executed.
 
 =head1 TODO
 
