@@ -1,3 +1,9 @@
+0.06	17 January 2004
+	Verified Thread::Bless works with 5.8.3 and 5.9.0.  Adapted
+	documentation slightly to reflect this.
+
+	Now requires version 5.8.1 in the Makefile.PL.
+
 0.05	28 December 2003
 	Added automatic required modules update using Devel::Required.
 

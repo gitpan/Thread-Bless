@@ -3,7 +3,7 @@ package Thread::Bless;
 # Make sure we have version info for this module
 # Make sure we do everything by the book from now on
 
-$VERSION = '0.05';
+$VERSION = '0.06';
 use strict;
 
 # Make sure we can find out the refaddr of an object and weaken it
@@ -364,7 +364,8 @@ these problems for specific versions of Perl.
 
 Doesn't seem to handle weakened references at all: core dumps during the
 test-suite with "Bizarre SvTYPE [80]" error.  It is not recommended to use
-Thread::Bless on this version of Perl (yet).
+Thread::Bless on this version of Perl (yet) and therefore you cannot easily
+install Thread::Bless with 5.8.0.
 
 =item Perl 5.8.1
 
@@ -376,7 +377,7 @@ has Thread::Bless enabled on it:
 So far, this warning does not seem to affect further execution of Perl.  The
 test-suite should complete without finding any errors.
 
-=item Perl 5.8.2
+=item Perl 5.8.2, 5.8.3 and 5.9.0
 
 Issues warnings whenever a thread is shut down, one for each package that
 has Thread::Bless enabled on it:
@@ -387,6 +388,14 @@ So far, this warning does not seem to affect further execution of Perl.  The
 test-suite should complete without finding any errors.
 
 =back
+
+Futhermore, some interaction with L<Test::Harness> causes the warning:
+
+ Too late to run INIT block at .../Thread/Bless.pm line NNN.
+
+to be displayed during testing.  It does not seem to affect the outcome of the
+test.  See also L</"MOD_PERL"> for more information about INIT {} related
+issues.
 
 =head1 MOD_PERL
 
@@ -427,7 +436,7 @@ Stas Bekman for the initial impetus, comments and suggestions.
 
 =head1 COPYRIGHT
 
-Copyright (c) 2003 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
+Copyright (c) 2003-2004 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
 reserved.  This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 

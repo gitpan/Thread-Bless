@@ -5,6 +5,15 @@ BEGIN {				# Magic Perl CORE pragma
     }
 }
 
+BEGIN {
+    if ($ENV{FORKS_FOR_THREADS}) {
+        eval {
+            require forks; forks->import;
+            require forks::shared; forks::shared->import;
+        };
+    }
+} #BEGIN
+
 use Test::More tests => 14;
 use strict;
 use warnings;
